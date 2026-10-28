@@ -1,0 +1,618 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Instrucciones del sistema RISC-V</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+/* Diseño: barra con pestañas (Presentación / Simulador); escenario 16:9 con 6 diapositivas, notas debajo; simulador con 3 paneles.
+   Estilo oscuro por decisión de diseño: azul y blanco sobre azul marino. */
+:root{
+  --bg:#060c19; --stage:#08112a; --surface:#0d1730; --surface2:#142349; --line:#243a66;
+  --blue:#3f8cff; --sky:#8ccbff; --white:#f3f7ff; --muted:#a3b5d6; --warn:#ffb454;
+  --f-display:'Chakra Petch','Segoe UI',system-ui,sans-serif;
+  --f-body:'IBM Plex Sans','Segoe UI',system-ui,sans-serif;
+  --f-mono:'IBM Plex Mono',ui-monospace,Consolas,monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--white);font:15px/1.5 var(--f-body);
+  padding-block:16px 40px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.page{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+button,select,input{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--sky);outline-offset:2px}
+code,.mono{font-family:var(--f-mono)}
+
+/* barra */
+.bar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px}
+.brand{display:flex;align-items:center;gap:10px;font-family:var(--f-display);font-weight:600;letter-spacing:.02em}
+.brand .ic{width:26px;height:26px;color:var(--sky)}
+.brand small{display:block;font:400 12px var(--f-body);color:var(--muted);letter-spacing:0}
+.tabs{display:flex;gap:6px;background:var(--surface);border:1px solid var(--line);padding:4px;border-radius:10px}
+.tabs button{background:none;border:0;padding:7px 14px;border-radius:7px;cursor:pointer;color:var(--muted);font-weight:500}
+.tabs button[aria-current="true"]{background:var(--blue);color:#fff}
+
+/* iconos */
+.ic{width:1.6em;height:1.6em;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;flex:none}
+
+/* escenario */
+.stagewrap{container-type:inline-size}
+.stage{font-size:clamp(10px,1.36cqw,16px);position:relative;aspect-ratio:16/9;overflow:hidden;
+  border:1px solid var(--line);border-radius:12px;background-color:var(--stage);
+  background-image:radial-gradient(circle at 92% -10%,rgba(63,140,255,.22),transparent 45%),
+    linear-gradient(rgba(140,203,255,.045) 1px,transparent 1px),linear-gradient(90deg,rgba(140,203,255,.045) 1px,transparent 1px);
+  background-size:auto,2.6em 2.6em,2.6em 2.6em}
+.slide{position:absolute;inset:0;padding:2.1em 2.6em 1.8em;display:flex;flex-direction:column;gap:1.1em}
+.kicker{font:600 .8em var(--f-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--sky)}
+.slide h1,.slide h2{font-family:var(--f-display);font-weight:700;line-height:1.1;margin:0;text-wrap:balance}
+.slide h1{font-size:2.9em}
+.slide h2{font-size:2.15em}
+.lead{font-size:1.2em;color:var(--muted);margin:0;max-width:44em}
+.lead b{color:var(--white);font-weight:600}
+.kw{font-family:var(--f-mono);color:var(--sky);font-weight:500}
+.cols{display:grid;gap:1.6em;flex:1;min-height:0}
+.snum{position:absolute;right:2.6em;top:1.9em;font:500 .85em var(--f-mono);color:var(--muted)}
+
+/* chips */
+.chips{display:flex;flex-wrap:wrap;gap:.6em}
+.chip{display:inline-flex;align-items:center;gap:.5em;padding:.4em .85em;border:1px solid var(--line);border-radius:999px;background:var(--surface);font-size:.95em}
+.chip b{font-family:var(--f-display);font-size:1.25em;color:var(--sky)}
+.chip.fill{background:var(--blue);border-color:var(--blue);color:#fff}
+.chip.fill b{color:#fff}
+
+/* diapositiva 1 */
+.s1{display:grid;grid-template-columns:1.05fr 1fr;gap:2em;align-items:center;flex:1}
+.s1 .txt{display:flex;flex-direction:column;gap:1.2em}
+.diagram{width:100%;height:auto}
+.diagram .box{fill:var(--surface);stroke:var(--line);stroke-width:1.5}
+.diagram .box2{fill:var(--surface2);stroke:var(--line)}
+.diagram .hl{stroke:var(--blue);stroke-width:1.6}
+.diagram .os{fill:var(--surface2);stroke:var(--blue)}
+.diagram .lbl{fill:var(--white);font:600 15px var(--f-display)}
+.diagram .sm{fill:var(--sky);font:12px var(--f-body)}
+.diagram .mn{fill:var(--sky);font:500 12px var(--f-mono)}
+.diagram .ln{stroke:var(--sky);stroke-width:1.6;fill:none}
+
+/* tablas */
+.tbl{width:100%;border-collapse:separate;border-spacing:0;font-size:1.08em}
+.tbl th{font:600 .72em var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--sky);text-align:left;padding:.6em .9em;border-bottom:1px solid var(--line)}
+.tbl td{padding:.85em .9em;border-bottom:1px solid var(--line);vertical-align:middle}
+.tbl tr:last-child td{border-bottom:0}
+.tbl td:first-child{font:600 1.05em var(--f-mono);color:var(--white);white-space:nowrap}
+.tag{display:inline-block;padding:.2em .7em;border-radius:6px;background:var(--blue);color:#fff;font:600 .95em var(--f-display);letter-spacing:.03em}
+.tblbox{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:.4em .6em}
+.warnline{display:flex;flex-wrap:wrap;gap:.6em 1.4em;align-items:center;font-size:1.02em;color:var(--muted)}
+.warnline .chip{color:var(--white)}
+
+/* bits */
+.bits{display:inline-flex;gap:.22em}
+.bit{width:2.05em;height:2.05em;display:inline-grid;place-items:center;font:500 1em var(--f-mono);
+  border:1px solid var(--line);background:var(--surface);color:var(--muted);border-radius:4px;padding:0}
+.bit.gap{margin-left:.7em}
+.bit.on{background:var(--blue);border-color:var(--blue);color:#fff}
+.bit.mk{box-shadow:inset 0 -3px 0 var(--sky)}
+.bit.chg{outline:2px solid var(--white);outline-offset:1px}
+.brow{display:flex;align-items:center;gap:1em;flex-wrap:wrap}
+.slide .brow{flex-wrap:nowrap}
+.brow .nm{width:9.5em;font-size:.92em;color:var(--muted)}
+.brow .nm b{display:block;color:var(--white);font:600 1.05em var(--f-mono)}
+.stack{display:flex;flex-direction:column;gap:.7em}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:1em 1.2em}
+.ptitle{font:600 .75em var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--sky);margin:0 0 .8em}
+.s3{grid-template-columns:1.25fr 1fr}
+
+/* diapositiva 4 */
+.s4{grid-template-columns:1fr 1fr;grid-auto-rows:1fr}
+.blk{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:1.1em 1.3em;display:flex;gap:1.1em;align-items:flex-start}
+.blk .ic{width:3em;height:3em;color:var(--sky);padding:.55em;background:var(--surface2);border-radius:10px;stroke-width:1.5}
+.blk h3{font:600 1.5em var(--f-mono);margin:0 0 .25em}
+.blk p{margin:0;font-size:1.08em;color:var(--muted)}
+.blk p b{color:var(--white);font-weight:600}
+
+/* diapositiva 5 */
+.s5{grid-template-columns:repeat(3,1fr);flex:none;align-items:stretch}
+.s5 .grp{min-height:15em}
+.grp{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:1.1em 1.3em;display:flex;flex-direction:column;gap:.7em}
+.grp .top{display:flex;align-items:center;gap:.8em}
+.grp .top .ic{width:2.2em;height:2.2em;color:var(--sky)}
+.grp .num{font:700 3em var(--f-display);line-height:1;color:var(--white)}
+.grp h3{margin:0;font:600 1.2em var(--f-display)}
+.grp .idea{font-size:1.05em;color:var(--muted)}
+.grp .idea b{color:var(--sky);font:600 1.1em var(--f-display)}
+.grp .list{display:flex;flex-wrap:wrap;gap:.4em;margin-top:auto}
+.grp .list span{font:500 .82em var(--f-mono);padding:.25em .55em;border:1px solid var(--line);border-radius:5px;background:var(--surface2)}
+.prop{margin-top:auto;display:flex;height:2.6em;border-radius:8px;overflow:hidden;border:1px solid var(--line);font:600 .95em var(--f-mono)}
+.prop div{display:grid;place-items:center}
+.prop .a{flex:3;background:#2a5bb8}.prop .b{flex:6;background:var(--blue)}.prop .c{flex:4;background:#d7e8ff;color:#06204a}
+
+/* diapositiva 6 */
+.s6{grid-template-columns:1fr;gap:1.1em;align-content:start}
+.idea6{display:flex;gap:1.1em;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:.9em 1.3em;font-size:1.45em}
+.idea6 .ic{width:2.2em;height:2.2em;color:var(--sky)}
+.idea6 b{color:var(--white)}
+.idea6 span{color:var(--muted)}
+.quote{margin-top:auto;border-top:1px solid var(--line);padding-top:1em;font:600 1.45em/1.3 var(--f-display);color:var(--white);text-wrap:balance}
+.quote i{font-style:normal;color:var(--sky)}
+
+/* controles */
+.ctrl{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px}
+.nav{display:flex;align-items:center;gap:12px}
+.btn{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:8px 14px;cursor:pointer;font-weight:500}
+.btn:hover{border-color:var(--sky)}
+.btn.pri{background:var(--blue);border-color:var(--blue);color:#fff}
+.btn:disabled{opacity:.4;cursor:default}
+.dots{display:flex;gap:6px}
+.dots button{width:26px;height:8px;border:0;border-radius:4px;background:var(--line);cursor:pointer;padding:0}
+.dots button[aria-current="true"]{background:var(--blue)}
+.count{font:500 13px var(--f-mono);color:var(--muted);min-width:3.5em;text-align:center}
+.notes{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 18px}
+.notes h3{margin:0 0 6px;font:600 12px var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--sky)}
+.notes p{margin:0;max-width:75ch;font-size:15px;line-height:1.6}
+
+/* simulador */
+.simhead{display:flex;flex-direction:column;gap:4px}
+.simhead h2{font:700 26px var(--f-display);margin:0}
+.simhead p{margin:0;color:var(--muted);max-width:70ch}
+.subtabs{display:flex;flex-wrap:wrap;gap:8px}
+.subtabs button{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:8px 14px;cursor:pointer;font-weight:500;color:var(--muted)}
+.subtabs button[aria-current="true"]{border-color:var(--blue);color:var(--white);background:var(--surface2)}
+.sp{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:14px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px 18px;min-width:0}
+.card h3{margin:0 0 12px;font:600 12px var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--sky)}
+.field{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
+.field label{font-size:13px;color:var(--muted)}
+select{background:var(--surface2);border:1px solid var(--line);border-radius:8px;padding:8px 10px;font:500 15px var(--f-mono);max-width:100%}
+.sim .bit{font-size:15px;cursor:default}
+.sim button.bit{cursor:pointer}
+.sim button.bit:disabled{opacity:.35;cursor:not-allowed}
+.sim .brow{margin-bottom:12px}
+.sim .brow .nm{width:150px;font-size:13px}
+.hex{font:500 13px var(--f-mono);color:var(--muted)}
+.explain{margin:4px 0 0;padding:10px 12px;border-left:3px solid var(--blue);background:var(--surface2);border-radius:0 8px 8px 0;font-size:14px}
+.row-btns{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.modes{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.mode{border:1px solid var(--line);border-radius:10px;padding:10px 12px;opacity:.55}
+.mode.act{opacity:1;border-color:var(--blue);background:var(--surface2)}
+.mode b{display:block;font:600 15px var(--f-display)}
+.mode span{font-size:12px;color:var(--muted)}
+.regs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+.regs div{border:1px solid var(--line);border-radius:8px;padding:8px 10px;background:var(--surface2)}
+.regs small{display:block;font:500 11px var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.regs span{font:600 15px var(--f-mono)}
+.log{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.log li{font-size:14px;padding:8px 10px;border-radius:8px;background:var(--surface2);border-left:3px solid var(--blue)}
+.log li.warn{border-left-color:var(--warn)}
+.log li code{color:var(--sky)}
+.steps{list-style:none;margin:0 0 14px;padding:0;display:flex;flex-direction:column;gap:8px}
+.steps li{display:flex;gap:10px;align-items:center;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--surface2);font-size:14px}
+.steps li.fz{border-color:var(--blue);background:#17316b}
+.steps li .t{font:600 11px var(--f-mono);letter-spacing:.08em;color:var(--sky);min-width:62px}
+.out{padding:12px 14px;border-radius:8px;border:1px solid var(--blue);background:var(--surface2);font-size:14.5px}
+.out.bad{border-color:var(--warn)}
+.out b{display:block;margin-bottom:2px;font:600 12px var(--f-mono);letter-spacing:.1em;text-transform:uppercase}
+.out.bad b{color:var(--warn)}.out:not(.bad) b{color:var(--sky)}
+.switch{display:inline-flex;align-items:center;gap:8px;cursor:pointer;margin-bottom:14px;font-weight:500}
+.switch input{width:18px;height:18px;accent-color:var(--blue)}
+
+/* pantallas angostas */
+@media (max-width:760px){
+  .stage{aspect-ratio:auto;font-size:14px}
+  .slide{position:static;padding:1.4em 1.2em 1.4em}
+  .s1,.s3,.s4,.s5{grid-template-columns:1fr}
+  .snum{position:static}
+  .slide h1{font-size:2.1em}.slide h2{font-size:1.7em}
+  .tblbox{overflow-x:auto}
+  .bit{width:1.9em;height:1.9em}
+  .sp{grid-template-columns:1fr}
+  .quote{font-size:1.2em}
+}
+@media (prefers-reduced-motion:no-preference){.slide:not([hidden]){animation:in .25s ease-out}}
+@keyframes in{from{opacity:.0;transform:translateY(4px)}to{opacity:1;transform:none}}
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-cpu" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2"/><rect x="9.5" y="9.5" width="5" height="5"/><path d="M9 3v3M15 3v3M9 18v3M15 18v3M3 9h3M3 15h3M18 9h3M18 15h3"/></symbol>
+  <symbol id="i-mem" viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="10" rx="1.5"/><path d="M7 10.5v3M11 10.5v3M15 10.5v3M6 17v3M10 17v3M14 17v3M18 17v3"/></symbol>
+  <symbol id="i-os" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M3 8h18M8 21h8M12 17v4"/></symbol>
+  <symbol id="i-call" viewBox="0 0 24 24"><path d="M4 12h11M11 7l5 5-5 5M20 4v16"/></symbol>
+  <symbol id="i-bug" viewBox="0 0 24 24"><path d="M9 9a3 3 0 0 1 6 0v6a3 3 0 0 1-6 0zM3 12h4M17 12h4M5 6l3 3M19 6l-3 3M5 19l3-3M19 19l-3-3"/></symbol>
+  <symbol id="i-return" viewBox="0 0 24 24"><path d="M9 14 4 9l5-5M4 9h10a6 6 0 0 1 0 12h-3"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></symbol>
+  <symbol id="i-order" viewBox="0 0 24 24"><path d="M4 7h13l-3-3M20 17H7l3 3"/></symbol>
+  <symbol id="i-reg" viewBox="0 0 24 24"><path d="M4 8h16M4 16h16"/><circle cx="9" cy="8" r="2"/><circle cx="15" cy="16" r="2"/></symbol>
+</svg>
+
+<div class="page">
+  <header class="bar">
+    <div class="brand"><svg class="ic"><use href="#i-cpu"/></svg><div>RISC-V<small>Sección 5.14 · Instrucciones especiales y del sistema</small></div></div>
+    <nav class="tabs" aria-label="Vista">
+      <button type="button" id="tab-deck">Presentación</button>
+      <button type="button" id="tab-sim">Simulador</button>
+    </nav>
+  </header>
+
+  <!-- ================= PRESENTACIÓN ================= -->
+  <section id="view-deck" aria-label="Presentación">
+    <div class="stagewrap">
+      <div class="stage">
+
+        <!-- 1 -->
+        <article class="slide" data-n="1">
+          <div class="kicker">Introducción</div>
+          <div class="s1">
+            <div class="txt">
+              <h1>Las instrucciones especiales y del sistema en RISC-V</h1>
+              <p class="lead">No hacen cálculos: <b>coordinan la memoria</b>, <b>controlan al procesador</b> y permiten <b>pedir servicios al sistema operativo</b>.</p>
+              <div class="chips">
+                <span class="chip fill"><b>13</b> instrucciones</span>
+                <span class="chip"><b>3</b> grupos</span>
+              </div>
+            </div>
+            <svg class="diagram" viewBox="0 0 480 310" role="img" aria-label="Un procesador con registros CSR lee instrucciones y datos de la memoria y se comunica con el sistema operativo">
+              <defs><marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#8ccbff"/></marker></defs>
+              <rect class="box" x="10" y="14" width="170" height="156" rx="10"/>
+              <text class="lbl" x="95" y="40" text-anchor="middle">Procesador</text>
+              <rect class="box2" x="28" y="56" width="134" height="40" rx="6"/>
+              <text class="sm" x="95" y="81" text-anchor="middle">Núcleo: ejecuta</text>
+              <rect class="box2 hl" x="28" y="110" width="134" height="40" rx="6"/>
+              <text class="mn" x="95" y="135" text-anchor="middle">Registros CSR</text>
+              <rect class="box" x="300" y="14" width="170" height="156" rx="10"/>
+              <text class="lbl" x="385" y="40" text-anchor="middle">Memoria</text>
+              <rect class="box2" x="318" y="54" width="134" height="30" rx="6"/><text class="sm" x="385" y="74" text-anchor="middle">Código</text>
+              <rect class="box2" x="318" y="92" width="134" height="30" rx="6"/><text class="sm" x="385" y="112" text-anchor="middle">Datos</text>
+              <rect class="box2" x="318" y="130" width="134" height="30" rx="6"/><text class="sm" x="385" y="150" text-anchor="middle">Tablas de páginas</text>
+              <path class="ln" d="M300 70H182" marker-end="url(#ah)"/>
+              <text class="sm" x="241" y="62" text-anchor="middle">instrucciones</text>
+              <path class="ln" d="M182 125H298" marker-start="url(#ah)" marker-end="url(#ah)"/>
+              <text class="sm" x="241" y="117" text-anchor="middle">datos</text>
+              <rect class="box os" x="10" y="236" width="460" height="56" rx="10"/>
+              <text class="lbl" x="240" y="270" text-anchor="middle">Sistema operativo</text>
+              <path class="ln" d="M95 172V234" marker-start="url(#ah)" marker-end="url(#ah)"/>
+              <text class="mn" x="108" y="208">ECALL · excepciones</text>
+            </svg>
+          </div>
+        </article>
+
+        <!-- 2 -->
+        <article class="slide" data-n="2" hidden>
+          <div class="kicker">Grupo 1 · 3 instrucciones</div>
+          <h2>Instrucciones de ordenamiento de memoria</h2>
+          <div class="tblbox">
+            <table class="tbl">
+              <thead><tr><th>Instrucción</th><th>Función</th><th>Palabra clave</th></tr></thead>
+              <tbody>
+                <tr><td>FENCE.I</td><td>Sincroniza las modificaciones del código con la búsqueda de instrucciones.</td><td><span class="tag">Código</span></td></tr>
+                <tr><td>FENCE</td><td>Controla el orden observable de determinados accesos a memoria.</td><td><span class="tag">Orden</span></td></tr>
+                <tr><td>SFENCE.VMA</td><td>Sincroniza las traducciones de direcciones virtuales cuando se modifican las tablas de páginas.</td><td><span class="tag">Traducción</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="warnline"><span>No confundir:</span><span class="chip"><span class="mono kw">FENCE.I</span> instrucciones</span><span class="chip"><span class="mono kw">FENCE</span> accesos a memoria</span></div>
+        </article>
+
+        <!-- 3 -->
+        <article class="slide" data-n="3" hidden>
+          <div class="kicker">Grupo 2 · 6 instrucciones</div>
+          <h2>Instrucciones CSR</h2>
+          <p class="lead"><span class="kw">CSR</span> = <b>Control and Status Register</b> (registro de control y estado)</p>
+          <div class="cols s3">
+            <div class="stack">
+              <div class="tblbox">
+                <table class="tbl">
+                  <thead><tr><th></th><th>RW</th><th>RS</th><th>RC</th></tr></thead>
+                  <tbody>
+                    <tr><td>Con registro</td><td class="kw">CSRRW</td><td class="kw">CSRRS</td><td class="kw">CSRRC</td></tr>
+                    <tr><td>Con inmediato (I)</td><td class="kw">CSRRWI</td><td class="kw">CSRRSI</td><td class="kw">CSRRCI</td></tr>
+                  </tbody>
+                </table>
+              </div>
+              <div class="chips">
+                <span class="chip"><span class="kw">RW</span> leer y escribir</span>
+                <span class="chip"><span class="kw">RS</span> leer y activar bits</span>
+                <span class="chip"><span class="kw">RC</span> leer y borrar bits</span>
+                <span class="chip"><span class="kw">I</span> valor inmediato</span>
+              </div>
+            </div>
+            <div class="panel">
+              <p class="ptitle">Ejemplo con 8 bits</p>
+              <div class="stack" id="ex-bits"></div>
+            </div>
+          </div>
+        </article>
+
+        <!-- 4 -->
+        <article class="slide" data-n="4" hidden>
+          <div class="kicker">Grupo 3 · 4 instrucciones</div>
+          <h2>Instrucciones del sistema</h2>
+          <div class="cols s4">
+            <div class="blk"><svg class="ic"><use href="#i-call"/></svg><div><h3>ECALL</h3><p><b>Llamada al entorno.</b> Genera una excepción para, por ejemplo, solicitar un servicio al sistema operativo.</p></div></div>
+            <div class="blk"><svg class="ic"><use href="#i-bug"/></svg><div><h3>EBREAK</h3><p><b>Punto de interrupción.</b> Genera una excepción que facilita la depuración.</p></div></div>
+            <div class="blk"><svg class="ic"><use href="#i-return"/></svg><div><h3>SRET</h3><p><b>Retorno.</b> Regresa de un manejador de excepciones o interrupciones del modo supervisor.</p></div></div>
+            <div class="blk"><svg class="ic"><use href="#i-moon"/></svg><div><h3>WFI</h3><p><b>Espera.</b> Entra en un estado de espera o baja actividad mientras llega una interrupción relevante.</p></div></div>
+          </div>
+        </article>
+
+        <!-- 5 -->
+        <article class="slide" data-n="5" hidden>
+          <div class="kicker">Resumen general</div>
+          <h2>13 instrucciones, 3 grupos</h2>
+          <div class="cols s5">
+            <div class="grp"><div class="top"><svg class="ic"><use href="#i-order"/></svg><span class="num">3</span></div>
+              <h3>Ordenamiento de memoria</h3><div class="idea">Idea clave: <b>poner en orden</b></div>
+              <div class="list"><span>FENCE.I</span><span>FENCE</span><span>SFENCE.VMA</span></div></div>
+            <div class="grp"><div class="top"><svg class="ic"><use href="#i-reg"/></svg><span class="num">6</span></div>
+              <h3>Acceso a CSR</h3><div class="idea">Idea clave: <b>leer y modificar</b></div>
+              <div class="list"><span>CSRRW</span><span>CSRRS</span><span>CSRRC</span><span>CSRRWI</span><span>CSRRSI</span><span>CSRRCI</span></div></div>
+            <div class="grp"><div class="top"><svg class="ic"><use href="#i-os"/></svg><span class="num">4</span></div>
+              <h3>Sistema</h3><div class="idea">Idea clave: <b>hablar con el sistema operativo</b></div>
+              <div class="list"><span>ECALL</span><span>EBREAK</span><span>SRET</span><span>WFI</span></div></div>
+          </div>
+          <div class="prop" aria-label="Proporción 3, 6 y 4"><div class="a">3 · memoria</div><div class="b">6 · CSR</div><div class="c">4 · sistema</div></div>
+        </article>
+
+        <!-- 6 -->
+        <article class="slide" data-n="6" hidden>
+          <div class="kicker">Conclusión</div>
+          <h2>Tres ideas para recordar</h2>
+          <div class="cols s6">
+            <div class="idea6"><svg class="ic"><use href="#i-order"/></svg><div><b>Ordenamiento:</b> <span>sincronizan operaciones de memoria, instrucciones y traducciones de direcciones.</span></div></div>
+            <div class="idea6"><svg class="ic"><use href="#i-reg"/></svg><div><b>CSR:</b> <span>permiten leer y modificar registros de control y estado.</span></div></div>
+            <div class="idea6"><svg class="ic"><use href="#i-os"/></svg><div><b>Sistema:</b> <span>gestionan llamadas al entorno, depuración, retornos de excepciones y espera de interrupciones.</span></div></div>
+          </div>
+          <p class="quote">“Estas instrucciones permiten comprender mejor cómo interactúan los programas con el procesador y el sistema operativo”.</p>
+        </article>
+
+      </div>
+    </div>
+
+    <div class="ctrl" style="margin-top:14px">
+      <div class="nav">
+        <button type="button" class="btn" id="prev" aria-label="Diapositiva anterior">← Anterior</button>
+        <span class="count" id="count">1 / 6</span>
+        <button type="button" class="btn pri" id="next" aria-label="Diapositiva siguiente">Siguiente →</button>
+      </div>
+      <div class="dots" id="dots"></div>
+      <button type="button" class="btn" id="toggle-notes" aria-pressed="true">Notas del presentador</button>
+    </div>
+    <div class="notes" id="notes" style="margin-top:14px"><h3>Notas del presentador</h3><p id="notes-text"></p></div>
+  </section>
+
+  <!-- ================= SIMULADOR ================= -->
+  <section id="view-sim" class="sim" aria-label="Simulador" hidden>
+    <div class="simhead">
+      <h2>Simulador</h2>
+      <p>Prueba las instrucciones con ejemplos simplificados. Es una ayuda para entender la idea, no un procesador completo.</p>
+    </div>
+    <div class="subtabs" id="subtabs" style="margin:14px 0">
+      <button type="button" data-p="csr">Instrucciones CSR</button>
+      <button type="button" data-p="sys">ECALL, EBREAK, SRET, WFI</button>
+      <button type="button" data-p="fence">FENCE, FENCE.I, SFENCE.VMA</button>
+    </div>
+
+    <!-- CSR -->
+    <div class="sp" data-panel="csr">
+      <div class="card">
+        <h3>Configura la instrucción</h3>
+        <div class="field"><label for="csrInst">Instrucción</label>
+          <select id="csrInst"><option>CSRRW</option><option selected>CSRRS</option><option>CSRRC</option><option>CSRRWI</option><option>CSRRSI</option><option>CSRRCI</option></select></div>
+        <div class="field"><label id="opLabel">Operando (rs1): pulsa los bits para cambiarlos</label>
+          <div class="bits" id="opBits" role="group" aria-labelledby="opLabel"></div></div>
+        <div class="row-btns">
+          <button type="button" class="btn pri" id="csrRun">Ejecutar y guardar en el CSR</button>
+          <button type="button" class="btn" id="csrReset">Reiniciar CSR</button>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Resultado (vista de 8 bits)</h3>
+        <div class="brow"><div class="nm"><b>CSR actual</b></div><div class="bits" id="rCur"></div></div>
+        <div class="brow"><div class="nm"><b>Operando</b></div><div class="bits" id="rOp"></div></div>
+        <div class="brow"><div class="nm"><b>CSR después</b></div><div class="bits" id="rNew"></div></div>
+        <div class="brow"><div class="nm"><b>rd recibe</b>valor anterior</div><div class="bits" id="rRd"></div></div>
+        <p class="explain" id="csrExplain"></p>
+        <p class="hex" id="csrHex" style="margin:10px 0 0"></p>
+      </div>
+    </div>
+
+    <!-- Sistema -->
+    <div class="sp" data-panel="sys" hidden>
+      <div class="card">
+        <h3>Estado del procesador</h3>
+        <div class="modes"><div class="mode" id="mU"><b>Modo usuario</b><span>Ejecuta el programa</span></div><div class="mode" id="mS"><b>Modo supervisor</b><span>Ejecuta el manejador del SO</span></div></div>
+        <div class="regs"><div><small>pc</small><span id="vPc"></span></div><div><small>sepc</small><span id="vSepc"></span></div><div><small>Estado</small><span id="vSt"></span></div></div>
+        <div class="row-btns" style="margin-top:0">
+          <button type="button" class="btn" data-ins="ECALL">ECALL</button>
+          <button type="button" class="btn" data-ins="EBREAK">EBREAK</button>
+          <button type="button" class="btn" data-ins="SRET">SRET</button>
+          <button type="button" class="btn" data-ins="WFI">WFI</button>
+          <button type="button" class="btn pri" data-ins="IRQ">Llega una interrupción</button>
+          <button type="button" class="btn" data-ins="RESET">Reiniciar</button>
+        </div>
+        <p class="hex" style="margin:12px 0 0">Prueba: ECALL → WFI → interrupción → SRET.</p>
+      </div>
+      <div class="card"><h3>Qué ocurrió</h3><ul class="log" id="sysLog"></ul></div>
+    </div>
+
+    <!-- Fences -->
+    <div class="sp" data-panel="fence" hidden>
+      <div class="card">
+        <h3>Escenario</h3>
+        <div class="subtabs" id="fenceSel" style="margin-bottom:14px"></div>
+        <label class="switch"><input type="checkbox" id="fenceOn"> <span id="fenceLbl"></span></label>
+        <ul class="steps" id="fenceSteps"></ul>
+      </div>
+      <div class="card"><h3>Resultado posible</h3><div class="out" id="fenceOut"></div></div>
+    </div>
+  </section>
+</div>
+
+<script>
+const NOTES=[
+"Buenos días. Hoy voy a explicar las instrucciones especiales y del sistema de la arquitectura RISC-V, específicamente las que aparecen en la sección 5.14 del libro. Además de las instrucciones normales, como sumar, restar o mover datos, RISC-V cuenta con instrucciones especiales que permiten controlar la memoria, modificar registros internos del procesador y gestionar excepciones e interrupciones. En la figura que estamos estudiando aparecen 13 instrucciones, divididas en tres grupos: ordenamiento de memoria, acceso a registros de control y estado, e instrucciones del sistema.",
+"En este grupo encontramos tres instrucciones: FENCE.I, FENCE y SFENCE.VMA. FENCE.I se utiliza cuando un programa modifica instrucciones almacenadas en memoria; garantiza que la búsqueda de instrucciones pueda observar las modificaciones realizadas. FENCE controla el orden en que se observan determinadas operaciones de lectura y escritura de memoria; es importante cuando varios procesadores comparten información o cuando se trabaja con entrada y salida. SFENCE.VMA se utiliza cuando se modifican las tablas de páginas y es necesario sincronizar las traducciones de direcciones virtuales a físicas. En resumen: FENCE.I se relaciona con las instrucciones, FENCE con el orden de los accesos a memoria y SFENCE.VMA con la traducción de direcciones.",
+"CSR significa Control and Status Register, es decir, registros de control y estado; almacenan información sobre el estado y el funcionamiento del procesador. Hay seis instrucciones. CSRRW lee el valor de un CSR y escribe uno nuevo. CSRRS lee y activa determinados bits, sin modificar los demás bits que no están indicados en la máscara. CSRRC lee y desactiva los bits indicados por el registro fuente, conservando los demás. Las versiones CSRRWI, CSRRSI y CSRRCI hacen lo mismo, pero con un valor inmediato en lugar de un registro fuente. Para recordar: RW es leer y escribir, RS es leer y activar bits, RC es leer y borrar bits, e I es usar un valor inmediato. [Ejemplo del diagrama: con el CSR en 1010 0110 y la máscara 0000 1111, CSRRS deja 1010 1111 y CSRRC deja 1010 0000.]",
+"En este grupo encontramos cuatro instrucciones: ECALL, EBREAK, SRET y WFI. ECALL genera una excepción de llamada al entorno; puede utilizarse, por ejemplo, para solicitar un servicio al sistema operativo. EBREAK genera una excepción de punto de interrupción y se utiliza principalmente para facilitar la depuración de programas. SRET permite regresar de un manejador de excepciones o interrupciones que se ejecuta en modo supervisor, restaurando el estado de ejecución correspondiente. WFI significa Wait For Interrupt: permite que el procesador entre en un estado de espera o baja actividad mientras espera una condición de interrupción relevante. En resumen: ECALL solicita un servicio, EBREAK facilita la depuración, SRET permite regresar de una excepción y WFI permite esperar una interrupción.",
+"[Nota añadida: tu guion no tenía una sección para esta diapositiva.] Para resumir, son 13 instrucciones en tres grupos. Tres ordenan la memoria, seis acceden a los registros de control y estado, y cuatro gestionan el sistema. Una forma de recordarlo: el primer grupo pone en orden, el segundo lee y modifica registros, y el tercero permite hablar con el sistema operativo.",
+"Las 13 instrucciones estudiadas cumplen funciones importantes en la arquitectura RISC-V. Tres instrucciones se encargan del ordenamiento y la sincronización; seis permiten acceder a los registros de control y estado; y cuatro gestionan llamadas al entorno, depuración, retorno de excepciones y espera de interrupciones. Estas instrucciones permiten comprender mejor cómo interactúan los programas con el procesador y el sistema operativo. Muchas gracias."
+];
+
+/* ---------- utilidades de bits ---------- */
+function cells(v,o){o=o||{};let h='';
+  for(let i=7;i>=0;i--){const on=(v>>i)&1;let c='bit'+(on?' on':'')+(i===3?' gap':'');
+    if(o.prev!==undefined&&((o.prev>>i)&1)!==on)c+=' chg';
+    if(o.mask!==undefined&&((o.mask>>i)&1))c+=' mk';
+    h+='<span class="'+c+'">'+on+'</span>';}
+  return h;}
+const bin=v=>{const s=(v&255).toString(2).padStart(8,'0');return s.slice(0,4)+' '+s.slice(4)};
+const hex2=v=>'0x'+(v&255).toString(16).toUpperCase().padStart(2,'0');
+
+/* ejemplo de la diapositiva 3 */
+(function(){
+  const before=0xA6,mask=0x0F,rs=before|mask,rc=before&~mask&255;
+  const row=(n,sub,html)=>'<div class="brow"><div class="nm"><b>'+n+'</b>'+sub+'</div><div class="bits">'+html+'</div></div>';
+  document.getElementById('ex-bits').innerHTML=
+    row('CSR','antes',cells(before))+
+    row('Máscara','bits a cambiar',cells(mask,{mask:mask}))+
+    row('CSRRS','activa bits',cells(rs,{prev:before}))+
+    row('CSRRC','borra bits',cells(rc,{prev:before}));
+})();
+
+/* ---------- navegación ---------- */
+const slides=[...document.querySelectorAll('.slide')];
+const viewDeck=document.getElementById('view-deck'),viewSim=document.getElementById('view-sim');
+const tabDeck=document.getElementById('tab-deck'),tabSim=document.getElementById('tab-sim');
+const dots=document.getElementById('dots');
+slides.forEach((s,i)=>{const b=document.createElement('button');b.type='button';b.setAttribute('aria-label','Ir a la diapositiva '+(i+1));b.onclick=()=>{location.hash='d'+(i+1)};dots.appendChild(b)});
+let cur=1;
+function route(){
+  const h=(location.hash||'#d1').slice(1);
+  if(h==='simulador'){viewDeck.hidden=true;viewSim.hidden=false;tabSim.setAttribute('aria-current','true');tabDeck.removeAttribute('aria-current');return}
+  const m=/^d([1-6])$/.exec(h);cur=m?+m[1]:1;
+  viewSim.hidden=true;viewDeck.hidden=false;tabDeck.setAttribute('aria-current','true');tabSim.removeAttribute('aria-current');
+  slides.forEach((s,i)=>s.hidden=(i+1!==cur));
+  [...dots.children].forEach((d,i)=>{if(i+1===cur)d.setAttribute('aria-current','true');else d.removeAttribute('aria-current')});
+  document.getElementById('count').textContent=cur+' / 6';
+  document.getElementById('prev').disabled=cur===1;document.getElementById('next').disabled=cur===6;
+  document.getElementById('notes-text').textContent=NOTES[cur-1];
+}
+window.addEventListener('hashchange',route);
+tabDeck.onclick=()=>{location.hash='d'+cur};tabSim.onclick=()=>{location.hash='simulador'};
+document.getElementById('prev').onclick=()=>{if(cur>1)location.hash='d'+(cur-1)};
+document.getElementById('next').onclick=()=>{if(cur<6)location.hash='d'+(cur+1)};
+document.addEventListener('keydown',e=>{
+  if(viewDeck.hidden||/^(SELECT|INPUT|TEXTAREA)$/.test(e.target.tagName))return;
+  if(e.key==='ArrowRight'&&cur<6)location.hash='d'+(cur+1);
+  if(e.key==='ArrowLeft'&&cur>1)location.hash='d'+(cur-1);
+});
+const nb=document.getElementById('toggle-notes');
+nb.onclick=()=>{const n=document.getElementById('notes');n.hidden=!n.hidden;nb.setAttribute('aria-pressed',String(!n.hidden))};
+
+/* ---------- simulador: pestañas ---------- */
+const panels=[...document.querySelectorAll('[data-panel]')];
+const subs=[...document.querySelectorAll('#subtabs button')];
+function showPanel(p){panels.forEach(x=>x.hidden=x.dataset.panel!==p);subs.forEach(b=>{if(b.dataset.p===p)b.setAttribute('aria-current','true');else b.removeAttribute('aria-current')})}
+subs.forEach(b=>b.onclick=()=>showPanel(b.dataset.p));showPanel('csr');
+
+/* ---------- simulador CSR ---------- */
+let csr=0xA6,operand=0x0F;
+const instSel=document.getElementById('csrInst'),opBits=document.getElementById('opBits');
+const KIND={CSRRW:'RW',CSRRS:'RS',CSRRC:'RC',CSRRWI:'RW',CSRRSI:'RS',CSRRCI:'RC'};
+function compute(inst,old,op){const k=KIND[inst];return k==='RW'?op:k==='RS'?(old|op):(old&~op)&255}
+function renderOp(){
+  const imm=/I$/.test(instSel.value);if(imm)operand&=0x1F;
+  document.getElementById('opLabel').textContent=imm?'Inmediato de 5 bits: pulsa los bits para cambiarlos':'Operando (valor de rs1): pulsa los bits para cambiarlos';
+  opBits.innerHTML='';
+  for(let i=7;i>=0;i--){
+    const b=document.createElement('button');b.type='button';
+    b.className='bit'+(((operand>>i)&1)?' on':'')+(i===3?' gap':'');
+    b.textContent=(operand>>i)&1;b.setAttribute('aria-label','bit '+i+' valor '+((operand>>i)&1));
+    if(imm&&i>4){b.disabled=true}
+    b.onclick=()=>{operand^=(1<<i);renderCsr()};
+    opBits.appendChild(b);
+  }
+}
+const DESC={
+  RW:'escribe el operando completo en el CSR',
+  RS:'activa (pone en 1) los bits que están en 1 en el operando',
+  RC:'borra (pone en 0) los bits que están en 1 en el operando'
+};
+function renderCsr(){
+  renderOp();
+  const inst=instSel.value,k=KIND[inst],nw=compute(inst,csr,operand);
+  document.getElementById('rCur').innerHTML=cells(csr);
+  document.getElementById('rOp').innerHTML=cells(operand,{mask:k==='RW'?undefined:operand});
+  document.getElementById('rNew').innerHTML=cells(nw,{prev:csr});
+  document.getElementById('rRd').innerHTML=cells(csr);
+  document.getElementById('csrExplain').innerHTML='<code>'+inst+'</code> lee el CSR hacia <code>rd</code> y '+DESC[k]+'.'+(nw===csr?' Con este operando el CSR no cambia.':' Los bits con borde blanco son los que cambiaron.');
+  document.getElementById('csrHex').textContent='CSR actual '+bin(csr)+' ('+hex2(csr)+')  →  después '+bin(nw)+' ('+hex2(nw)+')';
+}
+instSel.onchange=renderCsr;
+document.getElementById('csrRun').onclick=()=>{csr=compute(instSel.value,csr,operand);renderCsr()};
+document.getElementById('csrReset').onclick=()=>{csr=0xA6;renderCsr()};
+renderCsr();
+
+/* ---------- simulador del sistema ---------- */
+const hx=n=>'0x'+n.toString(16).padStart(4,'0');
+let S,LOG;
+function resetSys(){S={mode:'U',pc:0x1000,sepc:null,wait:false};LOG=[{t:'Programa en modo usuario. Elige una instrucción.',w:false}];renderSys()}
+function say(t,w){LOG.unshift({t:t,w:!!w});LOG=LOG.slice(0,6)}
+function renderSys(){
+  document.getElementById('mU').className='mode'+(S.mode==='U'?' act':'');
+  document.getElementById('mS').className='mode'+(S.mode==='S'?' act':'');
+  document.getElementById('vPc').textContent=hx(S.pc);
+  document.getElementById('vSepc').textContent=S.sepc===null?'—':hx(S.sepc);
+  document.getElementById('vSt').textContent=S.wait?'en espera':'ejecutando';
+  document.getElementById('sysLog').innerHTML=LOG.map(l=>'<li class="'+(l.w?'warn':'')+'">'+l.t+'</li>').join('');
+}
+function sysDo(ins){
+  if(ins==='RESET'){resetSys();return}
+  if(S.wait&&ins!=='IRQ'){say('El procesador está en espera por <code>WFI</code>. Solo una interrupción lo despierta.',true);renderSys();return}
+  if(ins==='ECALL'||ins==='EBREAK'){
+    if(S.mode==='S'){say('Ya estás en el manejador (modo supervisor). Usa <code>SRET</code> para volver al programa.',true)}
+    else{S.sepc=S.pc;S.mode='S';S.pc=0x8000;
+      say(ins==='ECALL'?'<code>ECALL</code>: excepción de llamada al entorno. El programa pide un servicio y el manejador del sistema operativo toma el control.'
+        :'<code>EBREAK</code>: excepción de punto de interrupción. El control pasa al manejador, por ejemplo un depurador.')}
+  }else if(ins==='SRET'){
+    if(S.mode==='U'){say('<code>SRET</code> solo se usa desde el modo supervisor. En modo usuario provoca una excepción de instrucción ilegal.',true)}
+    else{S.mode='U';S.pc=S.sepc+4;say('<code>SRET</code>: regresa del manejador al programa. En este ejemplo simplificado, el manejador ya avanzó <code>sepc</code> una instrucción (+4).')}
+  }else if(ins==='WFI'){
+    if(S.mode==='U'){say('Este simulador usa <code>WFI</code> desde el modo supervisor, por ejemplo mientras el sistema operativo no tiene trabajo. Haz primero un <code>ECALL</code>.',true)}
+    else{S.wait=true;say('<code>WFI</code>: el procesador queda en espera, con baja actividad, hasta que llegue una interrupción.')}
+  }else if(ins==='IRQ'){
+    if(S.wait){S.wait=false;S.pc+=4;say('Llegó una interrupción: el procesador sale de la espera y continúa.')}
+    else{say('Interrupción registrada. En este simulador solo tiene efecto si el procesador está en espera por <code>WFI</code>.',true)}
+  }
+  renderSys();
+}
+document.querySelectorAll('[data-ins]').forEach(b=>b.onclick=()=>sysDo(b.dataset.ins));
+resetSys();
+
+/* ---------- simulador de fences ---------- */
+const SC=[
+ {id:'fi',name:'FENCE.I',lbl:'Incluir FENCE.I',steps:['El programa escribe instrucciones nuevas en memoria.','FENCE.I','El procesador salta a ese código.'],fz:1,
+  good:'La búsqueda de instrucciones ve el código nuevo y ejecuta lo que se acaba de escribir.',
+  bad:'Podría ejecutarse todavía la instrucción antigua, porque la búsqueda de instrucciones no tiene garantizado ver la modificación.'},
+ {id:'f',name:'FENCE',lbl:'Incluir FENCE',steps:['Núcleo A: escribe un dato.','FENCE','Núcleo A: escribe una bandera “dato listo”.','Núcleo B: ve la bandera y lee el dato.'],fz:1,
+  good:'Los accesos quedan ordenados: quien vea la bandera también verá el dato nuevo.',
+  bad:'El núcleo B podría ver la bandera activada y aun así leer el dato anterior, porque no se fijó el orden observable.'},
+ {id:'sf',name:'SFENCE.VMA',lbl:'Incluir SFENCE.VMA',steps:['El sistema operativo modifica una entrada de la tabla de páginas.','SFENCE.VMA','El programa usa esa dirección virtual.'],fz:1,
+  good:'La traducción de la dirección virtual se sincroniza con la tabla de páginas nueva.',
+  bad:'Podría seguir usándose una traducción antigua, anterior a la modificación de la tabla de páginas.'}
+];
+let sc=0;const fOn=document.getElementById('fenceOn');
+SC.forEach((s,i)=>{const b=document.createElement('button');b.type='button';b.textContent=s.name;b.onclick=()=>{sc=i;renderF()};document.getElementById('fenceSel').appendChild(b)});
+function renderF(){
+  const s=SC[sc];
+  [...document.getElementById('fenceSel').children].forEach((b,i)=>{if(i===sc)b.setAttribute('aria-current','true');else b.removeAttribute('aria-current')});
+  document.getElementById('fenceLbl').textContent=s.lbl;
+  const on=fOn.checked;
+  document.getElementById('fenceSteps').innerHTML=s.steps.map((t,i)=>{
+    const f=i===s.fz;if(f&&!on)return '<li style="opacity:.4"><span class="t">omitida</span><code>'+t+'</code></li>';
+    return '<li class="'+(f?'fz':'')+'"><span class="t">'+(f?'instrucción':'paso '+(i<s.fz?i+1:i))+'</span>'+(f?'<code>'+t+'</code>':'<span>'+t+'</span>')+'</li>'}).join('');
+  const o=document.getElementById('fenceOut');o.className='out'+(on?'':' bad');
+  o.innerHTML='<b>'+(on?'Con '+s.name:'Sin '+s.name)+'</b>'+(on?s.good:s.bad);
+}
+fOn.checked=true;fOn.onchange=renderF;renderF();
+
+route();
+</script>
+
+</body></html>
